@@ -22,7 +22,7 @@ def upload_to_imgbb(image_path):
             return None
 
 def process_images(folder_path, excel_file_path):
-    links = []  # Lista para almacenar los enlaces de las imágenes
+    links_dict = {}  # Diccionario para almacenar los enlaces de las imágenes por SKU
 
     for root, dirs, files in os.walk(folder_path):
         for file_name in files:
@@ -33,17 +33,23 @@ def process_images(folder_path, excel_file_path):
                 # Extraer el SKU del nombre de la carpeta
                 sku = os.path.basename(root)
 
-                links.append((imgbb_url, sku))
+                if sku not in links_dict:
+                    links_dict[sku] = []
+
+                links_dict[sku].append(imgbb_url)
 
     # Cargar el archivo Excel
     workbook = load_workbook(excel_file_path)
     sheet = workbook.active
 
     # Buscar el código SKU en la columna E y agregar la URL en la columna D
-    for link, sku in links:
+    for sku, image_links in links_dict.items():
         for row in sheet.iter_rows(min_row=2, max_col=5, max_row=sheet.max_row):
             if row[4].value == sku:  # Comparamos con el código SKU en la columna E (index 4)
-                sheet.cell(row=row[0].row, column=4, value=link).alignment = Alignment(wrap_text=True)
+                # Concatenar los enlaces separados por ", "
+                links_str = ', '.join(image_links)
+                sheet.cell(row=row[0].row, column=4, value=links_str).alignment = Alignment(wrap_text=True)
+
 
     # Guardar el archivo Excel
     workbook.save(excel_file_path)
