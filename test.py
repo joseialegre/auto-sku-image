@@ -1,1 +1,0 @@
-input("presione espacio para cerrar")
